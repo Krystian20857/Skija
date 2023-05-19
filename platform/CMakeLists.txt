@@ -1,3 +1,5 @@
+set(CMAKE_C_COMPILER_WORKS 1)
+set(CMAKE_CXX_COMPILER_WORKS 1)
 cmake_minimum_required(VERSION 3.9)
 project(skija LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
@@ -68,7 +70,7 @@ elseif(WIN32)
     target_include_directories(skija PRIVATE $ENV{JAVA_HOME}/include $ENV{JAVA_HOME}/include/win32)
     target_link_libraries(skija d3d12 dxgi d3dcompiler)
 
-    # target_compile_options(skija PRIVATE /MT)
+     target_compile_options(skija PRIVATE /MT)
     # set_property(TARGET skija PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded")
     set(CMAKE_CXX_FLAGS_RELEASE "/MT")
     set(CMAKE_CXX_FLAGS_DEBUG "/MTd")
@@ -77,6 +79,8 @@ elseif(WIN32)
         -DWIN32_LEAN_AND_MEAN
         -DSK_DIRECT3D
         -DU_NOEXCEPT=)
+    add_compile_definitions(_HAS_ITERATOR_DEBUGGING=0)
+    add_compile_definitions(_ITERATOR_DEBUG_LEVEL=0)
 endif()
 
 # Skia
