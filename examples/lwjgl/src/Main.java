@@ -1,11 +1,7 @@
 package io.github.humbleui.skija.examples.lwjgl;
 
-import java.nio.IntBuffer;
-import java.util.*;
-
 import org.lwjgl.glfw.*;
 import org.lwjgl.opengl.*;
-import org.lwjgl.system.MemoryStack;
 
 import static org.lwjgl.glfw.Callbacks.*;
 import static org.lwjgl.glfw.GLFW.*;
@@ -15,6 +11,20 @@ import io.github.humbleui.skija.*;
 import io.github.humbleui.skija.examples.scenes.*;
 import io.github.humbleui.skija.impl.*;
 import io.github.humbleui.types.*;
+import org.lwjgl.stb.STBImage;
+import org.lwjgl.system.MemoryStack;
+import org.lwjgl.system.MemoryUtil;
+
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
+import java.nio.channels.Channels;
+import java.nio.channels.FileChannel;
+import java.nio.channels.ReadableByteChannel;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 public class Main {
     public static void main(String [] args) throws Exception {
@@ -43,6 +53,8 @@ class Window {
     public int ypos = 0;
     public boolean vsync = true;
     public boolean stats = true;
+    public boolean renderTexture = false;
+    public BackendTexture texture;
     private int[] refreshRates;
     private String os = System.getProperty("os.name").toLowerCase();
 
@@ -140,7 +152,45 @@ class Window {
     }
 
     private void draw() {
-        Scenes.draw(canvas, width, height, dpi, xpos, ypos);
+        if (this.renderTexture) {
+            if (this.texture == null) {
+                try {
+                    final var textureId = GL11.glGenTextures();
+                    GL15.glActiveTexture(GL15.GL_TEXTURE0);
+                    GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureId);
+                    final var textureBytes = Files.readAllBytes(Paths.get(Scene.file("images/whytouserust.png")));
+                    final var buffer = memAlloc(textureBytes.length);
+                    buffer.put(textureBytes);
+                    buffer.rewind();
+
+                    try (MemoryStack stack = MemoryStack.stackPush()) {
+                        IntBuffer width = stack.mallocInt(1);
+                        IntBuffer height = stack.mallocInt(1);
+                        IntBuffer comp = stack.mallocInt(1);
+
+                        ByteBuffer image = STBImage.stbi_load_from_memory(buffer, width, height, comp, 4);
+                        final var texWidth = width.get();
+                        final var texHeight = height.get();
+                        GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA8, texWidth, texHeight, 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, image);
+                        STBImage.stbi_image_free(image);
+                        this.texture = BackendTexture.makeGL(texWidth, texHeight, false, GL11.GL_TEXTURE_2D, textureId, GL11.GL_RGBA8);
+                    }
+
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            final var recordingContext = this.canvas.getContext();
+            try (final var image = Image.makeFromTexture(recordingContext, this.texture, SurfaceOrigin.TOP_LEFT, ColorType.RGBA_8888, ColorAlphaType.PREMUL, ColorSpace.getDisplayP3())) {
+                canvas.clear(0xFFFFFFFF);
+                final var save = canvas.save();
+                canvas.scale(0.5f, 0.5f);
+                canvas.drawImage(image, 0, 0);
+                canvas.restoreToCount(save);
+            }
+        } else {
+            Scenes.draw(canvas, width, height, dpi, xpos, ypos);
+        }
         context.flush();
         glfwSwapBuffers(window);
     }
@@ -202,6 +252,9 @@ class Window {
                     case GLFW_KEY_G:
                         System.out.println("Before GC " + Stats.allocated);
                         System.gc();
+                        break;
+                    case GLFW_KEY_T:
+                        renderTexture = !renderTexture;
                         break;
                 }
             }

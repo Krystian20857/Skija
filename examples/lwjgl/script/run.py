@@ -19,9 +19,11 @@ def main():
     build_utils.fetch_maven('org.lwjgl', 'lwjgl', args.lwjgl_version),
     build_utils.fetch_maven('org.lwjgl', 'lwjgl-glfw', args.lwjgl_version),
     build_utils.fetch_maven('org.lwjgl', 'lwjgl-opengl', args.lwjgl_version),
+    build_utils.fetch_maven('org.lwjgl', 'lwjgl-stb', args.lwjgl_version),
     build_utils.fetch_maven('org.lwjgl', 'lwjgl', args.lwjgl_version, classifier=lwjgl_classifier),
     build_utils.fetch_maven('org.lwjgl', 'lwjgl-glfw', args.lwjgl_version, classifier=lwjgl_classifier),
-    build_utils.fetch_maven('org.lwjgl', 'lwjgl-opengl', args.lwjgl_version, classifier=lwjgl_classifier)
+    build_utils.fetch_maven('org.lwjgl', 'lwjgl-opengl', args.lwjgl_version, classifier=lwjgl_classifier),
+    build_utils.fetch_maven('org.lwjgl', 'lwjgl-stb', args.lwjgl_version, classifier=lwjgl_classifier)
   ]
 
   if args.skija_version:
@@ -45,6 +47,7 @@ def main():
   # Java
   subprocess.check_call([
     'java',
+    '-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005',
     '--class-path', build_utils.classpath_join(['target/classes'] + classpath)]
     + (['-XstartOnFirstThread'] if 'macos' == build_utils.system else [])
     + ['-Djava.awt.headless=true',
