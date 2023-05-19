@@ -1396,6 +1396,11 @@ public class Canvas extends Managed {
         return this;
     }
 
+    public RecordingContext getContext() {
+        long ptr = _nGetRecordingContext(_ptr);
+        return ptr == 0 ? null : new RecordingContext(ptr);
+    }
+
     @ApiStatus.Internal
     public static class _FinalizerHolder {
         public static final long PTR = _nGetFinalizer();
@@ -1452,4 +1457,5 @@ public class Canvas extends Managed {
     public static native int  _nGetSaveCount(long ptr);
     public static native void _nRestore(long ptr);
     public static native void _nRestoreToCount(long ptr, int saveCount);
+    public static native long _nGetRecordingContext(long ptr);
 }

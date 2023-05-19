@@ -144,6 +144,19 @@ public class Image extends RefCnt implements IHasImageInfo {
         return new Image(ptr);
     }
 
+    @NotNull @Contract("_ -> new")
+    public static Image makeFromTexture(@NotNull RecordingContext recordingContext, @NotNull BackendTexture texture, @NotNull SurfaceOrigin surfaceOrigin, @NotNull ColorType colorType, @NotNull ColorAlphaType alphaType, @NotNull ColorSpace colorSpace) {
+        try {
+            Stats.onNativeCall();
+            long ptr = _nMakeFromTexture(Native.getPtr(recordingContext), Native.getPtr(texture), surfaceOrigin.ordinal(), colorType.ordinal(), alphaType.ordinal(), Native.getPtr(colorSpace));
+            if (ptr == 0)
+                throw new RuntimeException("Failed to makeFromTexture " + surfaceOrigin + " " + colorType + " " + alphaType + " ");
+            return new Image(ptr);
+        } finally {
+            ReferenceUtil.reachabilityFence(colorSpace);
+        }
+    }
+
     /**
      * Returns a ImageInfo describing the width, height, color type, alpha type, and color space
      * of the Image.
@@ -363,6 +376,7 @@ public class Image extends RefCnt implements IHasImageInfo {
     @ApiStatus.Internal public static native long _nMakeFromBitmap(long bitmapPtr);
     @ApiStatus.Internal public static native long _nMakeFromPixmap(long pixmapPtr);
     @ApiStatus.Internal public static native long _nMakeFromEncoded(byte[] bytes);
+    @ApiStatus.Internal public static native long _nMakeFromTexture(long recordingContextPtr, long backendTexturePtr, int surfaceOrigin, int colorType, int alphaType, long colorSpacePtr);
     @ApiStatus.Internal public static native ImageInfo _nGetImageInfo(long ptr);
     @ApiStatus.Internal public static native long _nEncodeToData(long ptr, int format, int quality);
     @ApiStatus.Internal public static native long    _nMakeShader(long ptr, int tmx, int tmy, long samplingMode, float[] localMatrix);

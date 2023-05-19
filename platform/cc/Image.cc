@@ -47,7 +47,7 @@ extern "C" JNIEXPORT jlong JNICALL Java_io_github_humbleui_skija_Image__1nMakeFr
 }
 
 extern "C" JNIEXPORT jlong JNICALL Java_io_github_humbleui_skija_Image__1nMakeFromEncoded
-  (JNIEnv* env, jclass jclass, jbyteArray encodedArray) {
+        (JNIEnv* env, jclass jclass, jbyteArray encodedArray) {
     jsize encodedLen = env->GetArrayLength(encodedArray);
     jbyte* encoded = env->GetByteArrayElements(encodedArray, 0);
     sk_sp<SkData> encodedData = SkData::MakeWithCopy(encoded, encodedLen);
@@ -55,6 +55,19 @@ extern "C" JNIEXPORT jlong JNICALL Java_io_github_humbleui_skija_Image__1nMakeFr
 
     sk_sp<SkImage> image = SkImage::MakeFromEncoded(encodedData);
 
+    return reinterpret_cast<jlong>(image.release());
+}
+
+extern "C" JNIEXPORT jlong JNICALL Java_io_github_humbleui_skija_Image__1nMakeFromTexture
+        (JNIEnv* env, jclass jclass, jlong recordingContextPtr, jlong backendTexturePtr, jint surfaceOrigin, jint colorType, jint alphaType, jlong colorSpacePtr) {
+    GrRecordingContext* recordingContext = reinterpret_cast<GrRecordingContext*>(static_cast<uintptr_t>(recordingContextPtr));
+    GrBackendTexture* backendTexture = reinterpret_cast<GrBackendTexture*>(static_cast<uintptr_t>(backendTexturePtr));
+    SkColorSpace* colorSpace = reinterpret_cast<SkColorSpace*>(static_cast<uintptr_t>(colorSpacePtr));
+    sk_sp<SkImage> image = SkImage::MakeFromTexture(recordingContext, *backendTexture,
+                             static_cast<GrSurfaceOrigin>(surfaceOrigin),
+                             static_cast<SkColorType>(colorType),
+                             static_cast<SkAlphaType>(alphaType),
+                             sk_ref_sp<SkColorSpace>(colorSpace));
     return reinterpret_cast<jlong>(image.release());
 }
 

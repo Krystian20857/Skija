@@ -408,3 +408,7 @@ extern "C" JNIEXPORT void JNICALL Java_io_github_humbleui_skija_Canvas__1nRestor
 extern "C" JNIEXPORT void JNICALL Java_io_github_humbleui_skija_Canvas__1nRestoreToCount(JNIEnv* env, jclass jclass, jlong ptr, jint saveCount) {
     reinterpret_cast<SkCanvas*>(static_cast<uintptr_t>(ptr))->restoreToCount(saveCount);
 }
+
+extern "C" JNIEXPORT jlong JNICALL Java_io_github_humbleui_skija_Canvas__1nGetRecordingContext(JNIEnv* env, jclass jclass, jlong ptr) {
+    return reinterpret_cast<jlong>(reinterpret_cast<SkCanvas*>(static_cast<uintptr_t>(ptr))->recordingContext());
+}
